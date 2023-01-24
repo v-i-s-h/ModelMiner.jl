@@ -1,4 +1,5 @@
 [deps]
 MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+MLJLinearModels = "6ee0df7b-362f-4a72-a706-9e79364fb692"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
