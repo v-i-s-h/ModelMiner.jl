@@ -73,6 +73,11 @@ Results:
    8 │ RandomForestRegressor                        3.38003
 ```
 
+## TODO
+- [ ] Automated Feature scaling
+- [ ] Hyperparameter Tuning
+- [ ] Reporting performance statistics from Cross Validations
+
 ## Acknowledgements
 Thanks to the developers of [LazyPredict](https://github.com/shankarpandala/lazypredict)
 for inspiration and [@ablaom](https://github.com/ablaom) for helping me overcome
