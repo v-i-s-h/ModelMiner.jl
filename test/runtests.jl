@@ -24,11 +24,18 @@ end
         expected_models = [
             "ConstantClassifier",
             "DeterministicConstantClassifier",
-            # "LogisticClassifier",
-            # "MultinomialClassifier",
-            # "AdaBoostStumpClassifier", 
-            # "DecisionTreeClassifier",
-            # "RandomForestClassifier"
+            "LogisticClassifier",
+            "MultinomialClassifier",
+            "AdaBoostStumpClassifier", 
+            "DecisionTreeClassifier",
+            "RandomForestClassifier",
+            "LinearSVC",
+            "NuSVC",
+            "SVC",
+            "KernelPerceptron",
+            "LinearPerceptron",
+            "Pegasos",
+            "XGBoostClassifier"
         ]
 
         # Train models
@@ -50,8 +57,10 @@ end
         expected_models = [
             "ConstantRegressor",
             "DeterministicConstantRegressor",
-            # "DecisionTreeRegressor",
-            # "RandomForestRegressor"
+            "DecisionTreeRegressor",
+            "RandomForestRegressor",
+            "GaussianMixtureRegressor",
+            "NeuralNetworkRegressor"
         ]
 
         # Train models
