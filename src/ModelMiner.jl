@@ -1,49 +1,50 @@
 module ModelMiner
+
+import Pkg
 import MLJ
 import MLJModels
 import DataFrames: DataFrame
 
+LOADED_MODULES = []
 
 """
-    _load_mlj_packages(algos::Vector{NamedTuple})
-
-Load avaliable packages from a NamedTuple of algorithms.
-`algos` can be the results of `MLJ.models()`. The only requirement
-in `algos` is that each entry should have `name` and `package_name`.
-
-Note: This function will try to load all given algorithms if it is available
-on the packages environment.
+Source: Pkg package (modified)
 """
-function _load_mlj_packages(algos)
-    # Find all MLJPackages
-    loaded_models = []
+function installed()
+    deps = Pkg.dependencies()
+    installed_pkgs = Vector{String}()
+    for (uuid, dep) in deps
+        dep.is_direct_dep || continue
+        dep.version === nothing && continue
+        # installs[dep.name] = dep.version::VersionNumber
+        push!(installed_pkgs, dep.name)
+    end
+    return installed_pkgs
+end
+
+function __init__()
+    installed_pkgs = installed()
+
+    algos = MLJ.models()
+
     for a ∈ algos
-        # path = MLJModels.load_path(a.name; pkg=a.package_name)
         algo_path = MLJModels.load_path(a)
 
-        # Package name
+        # Extract package name
         pkg_name = split(algo_path, ".") |> first
 
-        try
-            eval(:(import $(Symbol(pkg_name))))
-            push!(loaded_models, algo_path)
-        catch e
-            if !isa(e, ArgumentError)
-                # If the error is not related to importing the MLJ Modules
-                rethrow()
+        # In the package is available in current environment, load it
+        if pkg_name ∈ installed_pkgs
+            pkg_name ∉ LOADED_MODULES && begin
+                @eval Main begin
+                    import $(Symbol(pkg_name))
+                end
+
+                push!(LOADED_MODULES, pkg_name)
             end
         end
     end
-
-    return loaded_models
 end
-
-# Load all available packages
-const LOADED_MODELS = _load_mlj_packages(MLJ.models())
-
-const BLACKLIST_MODELS = [
-    (name="MultitargetNeuralNetwork", package_name="BetaML")
-]
 
 
 """
@@ -55,15 +56,15 @@ function _mine(data...; measures=[])
     match_fn = MLJ.matching(data...)
     available_algos = MLJ.models(
         m -> match_fn(m) 
-        && (MLJModels.load_path(m) ∈ LOADED_MODELS)
-        && (m.name ∉ [bl.name for bl in BLACKLIST_MODELS])
+        && (
+            split(MLJModels.load_path(m), ".")[1] ∈ LOADED_MODULES
+        )
     )
-
 
     results = [] # To hold the results from each model training
 
     for _a ∈ available_algos
-        _model = MLJModels.load_path(_a)
+        _model = "Main." * MLJModels.load_path(_a)
         model = _model |> Meta.parse |> eval
         machine = model()
 
@@ -90,7 +91,7 @@ function _mine(data...; measures=[])
         catch
             # Some error happened in training this model.
             # Let's skip this
-            # @warn "Skipping $(_a.name) ($(_a.package_name)) due to internal errors"
+            @warn "Skipping $(_a.name) ($(_a.package_name)) due to internal errors"
         end
     end
 
