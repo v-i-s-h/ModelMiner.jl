@@ -22,6 +22,7 @@ function installed()
     return installed_pkgs
 end
 
+
 function __init__()
     installed_pkgs = installed()
 
@@ -34,14 +35,11 @@ function __init__()
         pkg_name = split(algo_path, ".") |> first
 
         # In the package is available in current environment, load it
-        if pkg_name ∈ installed_pkgs
-            pkg_name ∉ LOADED_MODULES && begin
-                @eval Main begin
-                    import $(Symbol(pkg_name))
-                end
-
-                push!(LOADED_MODULES, pkg_name)
+        if pkg_name ∈ installed_pkgs && pkg_name ∉ LOADED_MODULES
+            @eval Main begin
+                import $(Symbol(pkg_name))
             end
+            push!(LOADED_MODULES, pkg_name)
         end
     end
 end
@@ -53,46 +51,44 @@ end
 Train all avaliable models from the environment.
 """
 function _mine(data...; measures=[])
+    # Construct a function which can filter all matching algorithms for this data
     match_fn = MLJ.matching(data...)
+    # Get available matching algorithms based on loaded modules
     available_algos = MLJ.models(
         m -> match_fn(m) 
         && (
             split(MLJModels.load_path(m), ".")[1] ∈ LOADED_MODULES
         )
     )
-
+    
     results = [] # To hold the results from each model training
 
     for _a ∈ available_algos
-        _model = "Main." * MLJModels.load_path(_a)
-        model = _model |> Meta.parse |> eval
+        # Load corresponding MLJInterface from Main module
+        model = "Main." * MLJModels.load_path(_a) |>
+                    Meta.parse |> eval
+        # Construct the machine this algorithm
         machine = model()
 
-        try
-            # Train and evaluate
-            r = MLJ.evaluate(
-                machine,
-                data...;
-                resampling=MLJ.CV(shuffle=true),
-                verbosity=0,
-                measures=measures
-            )
+        # Train and evaluate
+        r = MLJ.evaluate(
+            machine,
+            data...;
+            resampling=MLJ.CV(shuffle=true),
+            verbosity=0,
+            measures=measures
+        )
 
-            # Save results
-            push!(
-                results, (
-                    name=_a.name,
-                    NamedTuple(zip(
-                        measures .|> typeof .|> t -> t.name.name, # get measurement name as symbol
-                        r.measurement # corresponding measurement value
-                    ))...
-                )
+        # Save results
+        push!(
+            results, (
+                name=_a.name,
+                NamedTuple(zip(
+                    measures .|> typeof .|> t -> t.name.name, # get measurement name as symbol
+                    r.measurement # corresponding measurement value
+                ))...
             )
-        catch
-            # Some error happened in training this model.
-            # Let's skip this
-            @warn "Skipping $(_a.name) ($(_a.package_name)) due to internal errors"
-        end
+        )
     end
 
     return results
