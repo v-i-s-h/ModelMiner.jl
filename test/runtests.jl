@@ -5,11 +5,10 @@ import MLJ
 
 
 function is_models_in_results(results, expected_models)
-    return [r.name for r ∈ results] |> # Collect all model names in results
-           models -> [ # Check is each of expected is in results
-                expected ∈ models for expected ∈ expected_models
-           ] |>
-           r -> reduce(&, r) # Combine to all checks
+    return reduce(
+        &, 
+        expected ∈ results.name for expected ∈ expected_models
+    )
 end
 
 @testset "ModelMiner.jl" begin
@@ -35,10 +34,8 @@ end
         # Train models
         results = mine(X, y)
 
-        print(results)
-
         # Check if all expected models are in the results
-        # @test is_models_in_results(results, expected_models)
+        @test is_models_in_results(results, expected_models)
 
         # `results` is a NamedTuple with name, accuracy and F1 score
         # TODO: Check if results have `Accuracy` and `MulticlassFScore`
@@ -58,9 +55,7 @@ end
         # Train models
         results = mine(X, y)
 
-        print(results)
-
-        # @test is_models_in_results(results, expected_models)
+        @test is_models_in_results(results, expected_models)
 
         # TODO: Check if result has `RootMeanSquareError`
     end
