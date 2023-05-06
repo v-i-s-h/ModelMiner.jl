@@ -14,7 +14,7 @@ MLJModels = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 MLJXGBoostInterface = "54119dfa-1dab-4055-a167-80440f4f7a91"
 
 [compat]
-BetaML = "0.9"
+BetaML = "0.9, 0.10"
 DataFrames = "1.4"
 MLJ = "0.19"
 MLJDecisionTreeInterface = "0.3, 0.4"
