@@ -5,7 +5,8 @@ import MLJ
 
 
 function is_models_in_results(results, expected_models)
-    return [r.name for r ∈ results] |> # Collect all model names in results
+    # return [r.name for r ∈ results] |> # Collect all model names in results
+    return results.name |>
            models -> [ # Check is each of expected is in results
                 expected ∈ models for expected ∈ expected_models
            ] |>
@@ -41,6 +42,8 @@ end
         # Train models
         results = mine(X, y)
 
+        # @info results
+
         # Check if all expected models are in the results
         @test is_models_in_results(results, expected_models)
 
@@ -50,10 +53,10 @@ end
 
     @testset "Regressor test" begin
         data = dataset("datasets", "anscombe")
-
+    
         # Split into features and targets
         y, X = MLJ.unpack(data, ==(:Y4))
-
+    
         expected_models = [
             "ConstantRegressor",
             "DeterministicConstantRegressor",
@@ -62,12 +65,12 @@ end
             "GaussianMixtureRegressor",
             "NeuralNetworkRegressor"
         ]
-
+    
         # Train models
         results = mine(X, y)
-
+    
         @test is_models_in_results(results, expected_models)
-
+    
         # TODO: Check if result has `RootMeanSquareError`
     end
 end
